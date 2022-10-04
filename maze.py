@@ -29,83 +29,63 @@ class Maze():
                 
     def find_cell(self, x, y):
         for cell in self.cells:
-            print(cell.x, cell.y)
             if cell.x == x and cell.y == y:
                 return cell
     
-    # def check_adj(self):
-    #     all_visited = True
-    #     cell = self.current_cell
-    #     if (cell.x > 0):
-    #         self.find_cell(cell.x - 1, cell.y)
-    #     elif (direction == 1 and cell.y < self.height - 1
-    #     ):
-    #         cell.bottom = False
-    #         self.current_cell = self.find_cell(cell.x, cell.y + 1)
-    #         self.current_cell.top = False
-    #         moved = True
-    #         self.dfs()
-    #     # right
-    #     elif (direction == 2 and cell.x < self.width - 1
-    #     ):
-    #         cell.right = False
-    #         self.current_cell = self.find_cell(cell.x + 1, cell.y)
-    #         self.current_cell.left = False
-    #         moved = True
-    #         self.dfs()
-    #     # up
-    #     elif (direction == 3 and cell.y > 0
-    #     ):
-    #         cell.top = False
-    #         self.current_cell = self.find_cell(cell.x, cell.y - 1)
-    #         self.current_cell.bottom = False
-    #         moved = True
-    #         self.dfs()
+    def check_adj(self):
+        all_visited = []
+        cell = self.current_cell
+        if (cell.x > 0):
+            all_visited.append(self.find_cell(cell.x - 1, cell.y).visited)
+        if (cell.y < self.height - 1):
+            all_visited.append(self.find_cell(cell.x, cell.y + 1).visited)
+        if (cell.x < self.width - 1):
+            all_visited.append(self.find_cell(cell.x + 1, cell.y).visited)
+        if (cell.y > 0):
+            all_visited.append(self.find_cell(cell.x, cell.y - 1).visited)
+        
+        print(all_visited)
+        
+        return False in all_visited
     
     def dfs(self):
         cell = self.current_cell
-        print(cell.x, cell.y)
         if cell.visited:
-            print('visited')
+            print(cell.x, cell.y)
             return
         else:
             cell.visited = True
-            moved = False
-            while not moved:
+            while self.check_adj():
+                print(cell.x, cell.y)
                 direction = randint(0, 3)
-                print(direction)
                 # left
-                if (direction == 0 and cell.x > 0
-                ):
+                if (direction == 0 and cell.x > 0 and
+                    not self.find_cell(cell.x - 1, cell.y).visited):
                     cell.left = False
                     self.current_cell = self.find_cell(cell.x - 1, cell.y)
                     self.current_cell.right = False
-                    moved = True
-                    self.dfs()
                 # down
-                elif (direction == 1 and cell.y < self.height - 1
-                ):
+                elif (direction == 1 and cell.y < self.height - 1 and
+                    not self.find_cell(cell.x, cell.y + 1).visited):
                     cell.bottom = False
                     self.current_cell = self.find_cell(cell.x, cell.y + 1)
                     self.current_cell.top = False
-                    moved = True
-                    self.dfs()
                 # right
-                elif (direction == 2 and cell.x < self.width - 1
-                ):
+                elif (direction == 2 and cell.x < self.width - 1 and
+                    not self.find_cell(cell.x + 1, cell.y).visited):
                     cell.right = False
                     self.current_cell = self.find_cell(cell.x + 1, cell.y)
                     self.current_cell.left = False
-                    moved = True
-                    self.dfs()
                 # up
-                elif (direction == 3 and cell.y > 0
-                ):
+                elif (direction == 3 and cell.y > 0 and
+                    not self.find_cell(cell.x, cell.y - 1).visited):
                     cell.top = False
                     self.current_cell = self.find_cell(cell.x, cell.y - 1)
                     self.current_cell.bottom = False
-                    moved = True
-                    self.dfs()
+                x = cell.x
+                y = cell.y
+                self.dfs()
+                self.current_cell = self.find_cell(x, y)
     
     def draw(self):
         with Image.new(mode="RGB", size=(self.width * CELL_WIDTH + LINE_WIDTH, 
@@ -113,7 +93,7 @@ class Maze():
                        color=(255, 255, 255)) as im:
             drawing = ImageDraw.Draw(im)
             for cell in self.cells:
-                if cell.top:
+                if cell.top and cell.x != 0:
                     drawing.line([(cell.x * CELL_WIDTH, cell.y * CELL_WIDTH),
                                   (cell.x * CELL_WIDTH + CELL_WIDTH, cell.y * CELL_WIDTH)], 
                                  fill=FILL_COLOR, width=LINE_WIDTH)
@@ -121,7 +101,7 @@ class Maze():
                     drawing.line([(cell.x * CELL_WIDTH, cell.y * CELL_WIDTH),
                                   (cell.x * CELL_WIDTH, cell.y * CELL_WIDTH + CELL_WIDTH)], 
                                  fill=FILL_COLOR, width=LINE_WIDTH)
-                if cell.bottom:
+                if cell.bottom and cell.x != self.width - 1:
                     drawing.line([(cell.x * CELL_WIDTH, cell.y * CELL_WIDTH + CELL_WIDTH),
                                   (cell.x * CELL_WIDTH + CELL_WIDTH, cell.y * CELL_WIDTH + CELL_WIDTH)], 
                                  fill=FILL_COLOR, width=LINE_WIDTH)
@@ -133,6 +113,6 @@ class Maze():
             im.show()
 
 if __name__ == "__main__":
-    maze = Maze(5, 4, 0, 0)
+    maze = Maze(20, 20, 0, 0)
     maze.dfs()
     maze.draw()
