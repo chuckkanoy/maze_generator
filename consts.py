@@ -1,0 +1,17 @@
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+RED = (155, 0, 0)
+GREEN = (0, 155, 0)
+
+FILL_COLOR = (0, 0, 0)
+BACKGROUND_COLOR = (255, 255, 255)
+
+LINE_WIDTH = 2
+PIXEL_WIDTH = 500
+WIDTH = 10
+CELL_WIDTH = (int) (PIXEL_WIDTH / WIDTH) # must be greater than LINE_WIDTH
+
+UP = 0
+DOWN = 1
+LEFT = 2
+RIGHT = 3
