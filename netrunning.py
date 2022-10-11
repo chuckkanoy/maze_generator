@@ -2,6 +2,7 @@ import pygame
 from maze import Maze
 from consts import WIDTH, CELL_WIDTH, LINE_WIDTH, BACKGROUND_COLOR, \
     FILL_COLOR, RED, GREEN, LEFT, RIGHT, UP, DOWN, PIXEL_WIDTH
+from time import sleep
     
 
 BASE_PATH = 'assets\\'
@@ -15,6 +16,9 @@ BEGIN = 0
 PLAYING = 1
 VICTORY = 2
 LOSS = 3
+
+VELOCITY = .25
+MOVE_WAIT = .03
 
 class Netrunning():
     def __init__(self, maze: Maze, width = WIDTH * CELL_WIDTH + LINE_WIDTH, height = WIDTH * CELL_WIDTH + LINE_WIDTH):
@@ -35,9 +39,12 @@ class Netrunning():
         self.acquired_icon = pygame.transform.scale(self.acquired_icon, ((int)(CELL_WIDTH * 1 / 2), (int)(CELL_WIDTH * 1 / 2)))
         self.gameover_icon = pygame.image.load(BASE_PATH + GAME_OVER_PATH)
         self.gameover_icon = pygame.transform.scale(self.gameover_icon, ((int)(CELL_WIDTH * 1 / 2), (int)(CELL_WIDTH * 1 / 2)))
+        self.x = 0
+        self.y = 0
+        self.score = 0
         
-    def draw_cell(self, cell, icon):
-        self.display.blit(icon, (cell.x * CELL_WIDTH + CELL_WIDTH * 1 / 4, cell.y * CELL_WIDTH + CELL_WIDTH * 1 / 4))
+    def draw_cell(self, icon, x, y):
+        self.display.blit(icon, (x * CELL_WIDTH + CELL_WIDTH * 1 / 4, y * CELL_WIDTH + CELL_WIDTH * 1 / 4))
         
         end_cell = self.maze.end_cell
         curr_cell = self.maze.current_cell
@@ -47,20 +54,25 @@ class Netrunning():
                                 CELL_WIDTH - LINE_WIDTH,
                                 CELL_WIDTH - LINE_WIDTH)
         
-        if curr_cell.x == end_cell.x and curr_cell.y == end_cell.y:
+        if self.x == end_cell.x and self.y == end_cell.y:
             pygame.draw.rect(surface = self.display,
                              color = GREEN, rect = rectangle)
-            self.display.blit(self.acquired_icon, (cell.x * CELL_WIDTH + CELL_WIDTH * 1 / 4, cell.y * CELL_WIDTH + CELL_WIDTH * 1 / 4))
+            self.display.blit(self.acquired_icon, (self.x * CELL_WIDTH + CELL_WIDTH * 1 / 4, self.y * CELL_WIDTH + CELL_WIDTH * 1 / 4))
         elif self.state == LOSS:
             pygame.draw.rect(surface = self.display,
                              color = RED, rect = rectangle)
             self.display.blit(self.gameover_icon, (curr_cell.x * CELL_WIDTH + CELL_WIDTH * 1 / 4, curr_cell.y * CELL_WIDTH + CELL_WIDTH * 1 / 4))
+        
+        pygame.display.flip()
     
     def move(self, direction):
         if not self.maze.move(direction):
             self.state = LOSS
             self.draw_maze()
             return
+        self.draw_move(direction)
+        self.x = self.maze.current_cell.x
+        self.y = self.maze.current_cell.y
         self.draw_maze()
         current = self.maze.current_cell
         end = self.maze.end_cell
@@ -70,7 +82,7 @@ class Netrunning():
         
     def draw_maze(self):
         self.display.fill(BACKGROUND_COLOR)
-        self.draw_cell(self.maze.current_cell, self.player_icon)
+        self.draw_cell(self.player_icon, self.x, self.y)
         for cell in self.maze.cells:
             if cell.top:
                 pygame.draw.line(surface = self.display,
@@ -92,8 +104,39 @@ class Netrunning():
                                  start_pos = (cell.x * CELL_WIDTH + CELL_WIDTH, cell.y * CELL_WIDTH),
                                 end_pos = (cell.x * CELL_WIDTH + CELL_WIDTH, cell.y * CELL_WIDTH + CELL_WIDTH + LINE_WIDTH / 2), 
                                 color=FILL_COLOR, width=LINE_WIDTH)
-        self.draw_cell(self.maze.end_cell, self.dest_icon)
+        self.draw_cell(self.dest_icon, self.maze.end_cell.x, self.maze.end_cell.y)
         pygame.display.flip()
+    
+    def draw_move(self, direction):
+        dest_x_pix = self.x
+        dest_y_pix = self.y
+        print(self.x, self.y)
+        self.draw_cell(self.player_icon, self.x, self.y)
+        
+        if direction == LEFT:
+            dest_x_pix -= 1
+            while self.x > dest_x_pix:
+                self.draw_maze()
+                self.x -= VELOCITY
+                sleep(MOVE_WAIT)
+        elif direction == RIGHT:
+            dest_x_pix += 1
+            while self.x < dest_x_pix:
+                self.draw_maze()
+                self.x += VELOCITY
+                sleep(MOVE_WAIT)
+        elif direction == UP:
+            dest_y_pix -= 1
+            while self.y > dest_y_pix:
+                self.draw_maze()
+                self.y -= VELOCITY
+                sleep(MOVE_WAIT)
+        elif direction == DOWN:
+            dest_y_pix += 1
+            while self.y < dest_y_pix:
+                self.draw_maze()
+                self.y += VELOCITY
+                sleep(MOVE_WAIT)
     
     def draw_menu(self, text):
         font = pygame.font.Font(BASE_PATH + PUNK_FONT_PATH, 32)
@@ -108,14 +151,13 @@ class Netrunning():
         self.draw_menu('NETRUNNING')
     
     def draw_victory(self):
-        self.draw_menu('DATA ACQUIRED')
+        self.draw_menu('DATA ACQUIRED: {}'.format(self.score))
         
     def draw_loss(self):
-        self.draw_menu('CONNECTION LOST')
+        self.draw_menu('CONNECTION LOST: {}'.format(self.score))
         
 if __name__ == "__main__":
     maze = Maze()
-    maze.dfs()
     action_exec = False
     
     net = Netrunning(maze)
@@ -129,7 +171,9 @@ if __name__ == "__main__":
             elif net.state == BEGIN:
                 net.draw_begin()
                 if event.type == pygame.KEYDOWN:
-                    net.maze = Maze()
+                    net.x = 0
+                    net.y = 0
+                    net.maze = Maze(WIDTH, WIDTH)
                     net.maze.dfs()
                     net.draw_maze()
                     net.state = PLAYING
@@ -148,6 +192,7 @@ if __name__ == "__main__":
                     net.state = BEGIN
                     action_exec = False
                 elif event.type == pygame.KEYDOWN:
+                    net.score += 1
                     net.draw_victory()
                     action_exec = True
             elif net.state == LOSS:
@@ -157,3 +202,4 @@ if __name__ == "__main__":
                 elif event.type == pygame.KEYDOWN:
                     net.draw_loss()
                     action_exec = True
+                    net.score = 0

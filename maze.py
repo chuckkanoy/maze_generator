@@ -128,6 +128,6 @@ class Maze():
             im.show()
 
 if __name__ == "__main__":
-    maze = Maze(10, 5)
+    maze = Maze()
     maze.dfs()
     maze.draw()
