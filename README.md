@@ -20,4 +20,4 @@ I made this part of the project because I can't resist gamifying projects. The m
 
 ### Using Netrunning
 
-This part of the project can be run using the following command: `python netrunning.py`
+This part of the project can be run using the following command: `python netrunning.py`. You could also navigate to the following executable: `distribute\NETRUNNING\NETRUNNING.exe`.
