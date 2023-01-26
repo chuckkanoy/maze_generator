@@ -17,8 +17,8 @@ PLAYING = 1
 VICTORY = 2
 LOSS = 3
 
-VELOCITY = .25
-MOVE_WAIT = .03
+VELOCITY = .1
+MOVE_WAIT = .01
 
 class Netrunning():
     def __init__(self, maze: Maze, width = WIDTH * CELL_WIDTH + LINE_WIDTH, height = WIDTH * CELL_WIDTH + LINE_WIDTH):
@@ -29,8 +29,11 @@ class Netrunning():
         self.display.fill(BACKGROUND_COLOR)
         pygame.display.flip()
         self.maze = maze
+        # maze.dfs()
+        maze.draw(display=False)
         self.state = BEGIN
         self.player_icon = pygame.image.load(BASE_PATH + CYBERPUNK_PATH)
+        self.convert_PIL_to_surface()
         pygame.display.set_icon(self.player_icon)
         self.player_icon = pygame.transform.scale(self.player_icon, ((int)(CELL_WIDTH * 1 / 2), (int)(CELL_WIDTH * 1 / 2)))
         self.dest_icon = pygame.image.load(BASE_PATH + DEST_PATH)
@@ -42,6 +45,13 @@ class Netrunning():
         self.x = 0
         self.y = 0
         self.score = 0
+    
+    def convert_PIL_to_surface(self):
+        self.data = self.maze.maze_drawing.tobytes()
+        self.size = self.maze.maze_drawing.size
+        self.mode = self.maze.maze_drawing.mode
+        self.maze_asset = pygame.image.fromstring(self.data, self.size, self.mode)
+        self.rect = self.maze_asset.get_rect()
         
     def draw_cell(self, icon, x, y):
         self.display.blit(icon, (x * CELL_WIDTH + CELL_WIDTH * 1 / 4, y * CELL_WIDTH + CELL_WIDTH * 1 / 4))
@@ -82,35 +92,15 @@ class Netrunning():
         
     def draw_maze(self):
         self.display.fill(BACKGROUND_COLOR)
+        self.display.blit(self.maze_asset, self.rect)
         self.draw_cell(self.player_icon, self.x, self.y)
-        for cell in self.maze.cells:
-            if cell.top:
-                pygame.draw.line(surface = self.display,
-                                 start_pos = (cell.x * CELL_WIDTH, cell.y * CELL_WIDTH),
-                                end_pos = (cell.x * CELL_WIDTH + CELL_WIDTH, cell.y * CELL_WIDTH), 
-                                color=FILL_COLOR, width=LINE_WIDTH)
-            if cell.left:
-                pygame.draw.line(surface = self.display,
-                                 start_pos = (cell.x * CELL_WIDTH, cell.y * CELL_WIDTH),
-                                end_pos = (cell.x * CELL_WIDTH, cell.y * CELL_WIDTH + CELL_WIDTH), 
-                                color=FILL_COLOR, width=LINE_WIDTH)
-            if cell.bottom:
-                pygame.draw.line(surface = self.display,
-                                 start_pos = (cell.x * CELL_WIDTH, cell.y * CELL_WIDTH + CELL_WIDTH),
-                                end_pos = (cell.x * CELL_WIDTH + CELL_WIDTH, cell.y * CELL_WIDTH + CELL_WIDTH), 
-                                color=FILL_COLOR, width=LINE_WIDTH)
-            if cell.right:
-                pygame.draw.line(surface = self.display,
-                                 start_pos = (cell.x * CELL_WIDTH + CELL_WIDTH, cell.y * CELL_WIDTH),
-                                end_pos = (cell.x * CELL_WIDTH + CELL_WIDTH, cell.y * CELL_WIDTH + CELL_WIDTH + LINE_WIDTH / 2), 
-                                color=FILL_COLOR, width=LINE_WIDTH)
-        self.draw_cell(self.dest_icon, self.maze.end_cell.x, self.maze.end_cell.y)
+        self.draw_cell(self.dest_icon, self.maze.end_cell.x, 
+                        self.maze.end_cell.y)
         pygame.display.flip()
     
     def draw_move(self, direction):
         dest_x_pix = self.x
         dest_y_pix = self.y
-        print(self.x, self.y)
         self.draw_cell(self.player_icon, self.x, self.y)
         
         if direction == LEFT:
@@ -161,7 +151,6 @@ if __name__ == "__main__":
     action_exec = False
     
     net = Netrunning(maze)
-    net.draw_maze()
     
     running = True
     while running:
@@ -175,6 +164,8 @@ if __name__ == "__main__":
                     net.y = 0
                     net.maze = Maze(WIDTH, WIDTH)
                     net.maze.dfs()
+                    net.maze.draw(display=False)
+                    net.convert_PIL_to_surface()
                     net.draw_maze()
                     net.state = PLAYING
             elif net.state == PLAYING:

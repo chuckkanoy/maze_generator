@@ -28,6 +28,7 @@ class Maze():
         self.current_cell = self.find_cell(x_start, y_start)
         self.start_cell = self.find_cell(x_start, y_start)
         self.end_cell = self.find_cell(x_end, y_end)
+        self.maze_drawing = None
                 
     def find_cell(self, x, y):
         for cell in self.cells:
@@ -102,30 +103,31 @@ class Maze():
                 self.dfs()
                 self.current_cell = self.find_cell(x, y)
     
-    def draw(self):
-        with Image.new(mode="RGB", size=(self.width * CELL_WIDTH + LINE_WIDTH, 
-                                         self.height * CELL_WIDTH + LINE_WIDTH),
-                       color=(255, 255, 255)) as im:
-            drawing = ImageDraw.Draw(im)
-            for cell in self.cells:
-                if cell.top and cell.x != 0:
-                    drawing.line([(cell.x * CELL_WIDTH, cell.y * CELL_WIDTH),
-                                  (cell.x * CELL_WIDTH + CELL_WIDTH, cell.y * CELL_WIDTH)], 
-                                 fill=FILL_COLOR, width=LINE_WIDTH)
-                if cell.left:
-                    drawing.line([(cell.x * CELL_WIDTH, cell.y * CELL_WIDTH),
-                                  (cell.x * CELL_WIDTH, cell.y * CELL_WIDTH + CELL_WIDTH)], 
-                                 fill=FILL_COLOR, width=LINE_WIDTH)
-                if cell.bottom and cell.x != self.width - 1:
-                    drawing.line([(cell.x * CELL_WIDTH, cell.y * CELL_WIDTH + CELL_WIDTH),
-                                  (cell.x * CELL_WIDTH + CELL_WIDTH, cell.y * CELL_WIDTH + CELL_WIDTH)], 
-                                 fill=FILL_COLOR, width=LINE_WIDTH)
-                if cell.right:
-                    drawing.line([(cell.x * CELL_WIDTH + CELL_WIDTH, cell.y * CELL_WIDTH),
-                                  (cell.x * CELL_WIDTH + CELL_WIDTH, cell.y * CELL_WIDTH + CELL_WIDTH)], 
-                                 fill=FILL_COLOR, width=LINE_WIDTH)
-                
-            im.show()
+    def draw(self, display = True):
+        self.maze_drawing = Image.new(mode="RGB", 
+            size=(self.width * CELL_WIDTH + LINE_WIDTH,
+                  self.height * CELL_WIDTH + LINE_WIDTH),
+            color=(255, 255, 255))
+        drawing = ImageDraw.Draw(self.maze_drawing)
+        for cell in self.cells:
+            if cell.top:
+                drawing.line([(cell.x * CELL_WIDTH, cell.y * CELL_WIDTH),
+                                (cell.x * CELL_WIDTH + CELL_WIDTH, cell.y * CELL_WIDTH)], 
+                                fill=FILL_COLOR, width=LINE_WIDTH)
+            if cell.left:
+                drawing.line([(cell.x * CELL_WIDTH, cell.y * CELL_WIDTH),
+                                (cell.x * CELL_WIDTH, cell.y * CELL_WIDTH + CELL_WIDTH)], 
+                                fill=FILL_COLOR, width=LINE_WIDTH)
+            if cell.bottom:
+                drawing.line([(cell.x * CELL_WIDTH, cell.y * CELL_WIDTH + CELL_WIDTH),
+                                (cell.x * CELL_WIDTH + CELL_WIDTH, cell.y * CELL_WIDTH + CELL_WIDTH)], 
+                                fill=FILL_COLOR, width=LINE_WIDTH)
+            if cell.right:
+                drawing.line([(cell.x * CELL_WIDTH + CELL_WIDTH, cell.y * CELL_WIDTH),
+                                (cell.x * CELL_WIDTH + CELL_WIDTH, cell.y * CELL_WIDTH + CELL_WIDTH)], 
+                                fill=FILL_COLOR, width=LINE_WIDTH)
+        if display:  
+            self.maze_drawing.show()
 
 if __name__ == "__main__":
     maze = Maze()
